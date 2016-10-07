@@ -3,6 +3,7 @@
 %
 %
 % 29.09.2016    Residualization
+% 07.10.2016    run on TMEM RSN
 % ==========================================
 
 clear all
@@ -18,10 +19,10 @@ cd('/media/spectro/_media_spectro/RAID/data/TMEM_RSN');
 %
 % =====================================================
 
-restart_spm     = 0;
-clean_up        = 0;
+restart_spm         = 0;
+clean_up            = 0;
 
-residualization   = 1;
+residualization     = 1;
 transform_to_floats = 1;
 
 % =====================================================
@@ -29,9 +30,12 @@ transform_to_floats = 1;
 %  end of user input section
 %
 % =====================================================
+
+
+
 global basis_scripts;
-basis_scripts = '/media/spectro/_media_spectro/RAID/data/TMEM_RSN/autoscripts/';
-basis_dir = '/media/spectro/_media_spectro/RAID/data/TMEM_RSN/';
+basis_scripts   = '/media/spectro/_media_spectro/RAID/data/TMEM_RSN/autoscripts/';
+basis_dir       = '/media/spectro/_media_spectro/RAID/data/TMEM_RSN/';
 
 % =====================================================
 
@@ -40,11 +44,11 @@ master = dir('RSN_*');
 master_start = 1;
 master_end = size(master,1);
 
-% 1, 10
+% 1, 10  these RSN_??? did not run
 
-for i = 11:master_end
+for i = 11:master_end   
     
-    % make sure spm is up
+    % better restart spm if script is very slow 
     if restart_spm
         spm('defaults','fMRI');
         spm_jobman('initcfg');
@@ -56,13 +60,18 @@ for i = 11:master_end
     basis_fmri = [basis_dir,'/',master(i).name,'/'];
     cd (basis_fmri);
     
-    if residualization
+    %*****************
+    % RESIDUALIZATION
+    %*****************
+    if residualization  
         
+        % clean up and prevent SPM from asking to continue
         cmd = ('mkdir 1stlevel_Res'); system(cmd);
         c = sprintf('rm 1stlevel_Res/SPM.mat'); system(c);
         
+        % go to the fMRI directory
         cd(basis_fmri);
-        tmp = dir('drwavolbet*.img');
+        tmp = dir('drwavolbet*.img');   % detrended (d), resliced 2x2x2mm (r), DARTEL normalized (w), motion and slicetime corrected (a) fMRI volumes, bet extracted
         n_images = size(tmp,1);
         
         % ==============
@@ -78,17 +87,17 @@ for i = 11:master_end
             image_array        = [image_array; item];
         end
         
-        nuisance = load('rp_avol0005.txt');
-        tmp = load('fpca_wm_50_components.txt');
+        nuisance = load('rp_avol0005.txt'); % motion
+        tmp = load('fpca_wm_50_components.txt'); % CompCor IC 1 to 3 of WM
         tmp2 = tmp(:,1:3);
         nuisance = [nuisance tmp2];
-        tmp = load('fpca_csf_50_components.txt');
+        tmp = load('fpca_csf_50_components.txt'); % CompCor IC 1 to 3 of CSF
         tmp2 = tmp(:,1:3);
         nuisance = [nuisance tmp2];
-        tmp = load('fpca_std98_50_components.txt');
+        tmp = load('fpca_std98_50_components.txt'); % CompCor IC 1 to 3 of std98
         tmp2 = tmp(:,1:3);
         nuisance = [nuisance tmp2];
-        tmp = load('fsl_motion_outliers.txt');
+        tmp = load('fsl_motion_outliers.txt');  % FSL motion censoring
         nuisance = [nuisance tmp];
         
         %nuisance =nuisance';
