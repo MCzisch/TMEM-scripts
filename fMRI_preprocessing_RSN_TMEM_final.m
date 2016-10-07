@@ -4,7 +4,6 @@
 %
 % requires IXI templates (I have copied vbm8 from andromeda to "toolbox")
 %
-% 28.09.2016    requires eye mask in ../spm12/tpm to be excluded for std98 calculation
 % ==========================================
 
 clear all
